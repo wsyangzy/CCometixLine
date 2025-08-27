@@ -32,6 +32,6 @@ chrono = { version = "0.4", features = ["serde"], optional = true }
 dirs = { version = "5.0", optional = true }
 
 [features]
-default = ["tui", "self-update"]
+default = ["tui", "self-update", "dirs"]
 tui = ["ratatui", "crossterm", "ansi_term", "ansi-to-tui", "chrono"]
 self-update = ["ureq", "semver", "chrono", "dirs"]
