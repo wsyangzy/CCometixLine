@@ -498,6 +498,9 @@ impl App {
                         SegmentId::Directory => "Directory",
                         SegmentId::Git => "Git",
                         SegmentId::Usage => "Usage",
+                        SegmentId::Cost => "Cost",
+                        SegmentId::Session => "Session",
+                        SegmentId::OutputStyle => "Output Style",
                         SegmentId::Update => "Update",
                     };
                     let is_enabled = segment.enabled;
@@ -521,6 +524,9 @@ impl App {
                                 SegmentId::Directory => "Directory",
                                 SegmentId::Git => "Git",
                                 SegmentId::Usage => "Usage",
+                                SegmentId::Cost => "Cost",
+                                SegmentId::Session => "Session",
+                                SegmentId::OutputStyle => "Output Style",
                                 SegmentId::Update => "Update",
                             };
                             let is_enabled = segment.enabled;
