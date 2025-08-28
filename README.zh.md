@@ -59,8 +59,46 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 
 安装后：
 - ✅ 全局命令 `ccline` 可在任何地方使用
-- ✅ 自动配置 Claude Code 到 `~/.claude/ccline/ccline`
-- ✅ 立即可用！
+- ⚙️ 按照下方提示进行配置以集成到 Claude Code
+- 🎨 运行 `ccline -c` 打开配置面板进行主题选择
+
+### Claude Code 配置
+
+添加到 Claude Code `settings.json`：
+
+**Linux/macOS:**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "~/.claude/ccline/ccline",
+    "padding": 0
+  }
+}
+```
+
+**Windows:**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "%USERPROFILE%\\.claude\\ccline\\ccline.exe",
+    "padding": 0
+  }
+}
+```
+
+**后备方案 (npm 安装):**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "ccline",
+    "padding": 0
+  }
+}
+```
+*如果 npm 全局安装已在 PATH 中可用，则使用此配置*
 
 ### 更新
 
@@ -134,32 +172,6 @@ git clone https://github.com/Haleclipse/CCometixLine.git
 cd CCometixLine
 cargo build --release
 cp target/release/ccometixline ~/.claude/ccline/ccline
-```
-
-### Claude Code 配置
-
-添加到 Claude Code `settings.json`：
-
-**Linux/macOS:**
-```json
-{
-  "statusLine": {
-    "type": "command", 
-    "command": "~/.claude/ccline/ccline",
-    "padding": 0
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "statusLine": {
-    "type": "command", 
-    "command": "%USERPROFILE%\\.claude\\ccline\\ccline.exe",
-    "padding": 0
-  }
-}
 ```
 
 ## 使用

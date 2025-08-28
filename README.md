@@ -58,9 +58,47 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 ```
 
 After installation:
-- ✅ Global command `ccline` is available everywhere  
-- ✅ Automatically configured for Claude Code at `~/.claude/ccline/ccline`
-- ✅ Ready to use immediately!
+- ✅ Global command `ccline` is available everywhere
+- ⚙️ Follow the configuration steps below to integrate with Claude Code
+- 🎨 Run `ccline -c` to open configuration panel for theme selection
+
+### Claude Code Configuration
+
+Add to your Claude Code `settings.json`:
+
+**Linux/macOS:**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "~/.claude/ccline/ccline",
+    "padding": 0
+  }
+}
+```
+
+**Windows:**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "%USERPROFILE%\\.claude\\ccline\\ccline.exe",
+    "padding": 0
+  }
+}
+```
+
+**Fallback (npm installation):**
+```json
+{
+  "statusLine": {
+    "type": "command", 
+    "command": "ccline",
+    "padding": 0
+  }
+}
+```
+*Use this if npm global installation is available in PATH*
 
 ### Update
 
@@ -126,32 +164,6 @@ Move-Item "ccline.exe" "$env:USERPROFILE\.claude\ccline\"
 ```
 
 </details>
-
-### Claude Code Configuration
-
-Add to your Claude Code `settings.json`:
-
-**Linux/macOS:**
-```json
-{
-  "statusLine": {
-    "type": "command", 
-    "command": "~/.claude/ccline/ccline",
-    "padding": 0
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "statusLine": {
-    "type": "command", 
-    "command": "%USERPROFILE%\\.claude\\ccline\\ccline.exe",
-    "padding": 0
-  }
-}
-```
 
 ### Build from Source
 
