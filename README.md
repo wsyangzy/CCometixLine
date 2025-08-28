@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README.zh.md)
 
-A high-performance Claude Code statusline tool written in Rust with Git integration and real-time usage tracking.
+A high-performance Claude Code statusline tool written in Rust with Git integration, usage tracking, interactive TUI configuration, and Claude Code enhancement utilities.
 
 ![Language:Rust](https://img.shields.io/static/v1?label=Language&message=Rust&color=orange&style=flat-square)
 ![License:MIT](https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat-square)
@@ -15,13 +15,25 @@ The statusline shows: Model | Directory | Git Branch Status | Context Window Inf
 
 ## Features
 
-- **High performance** with Rust native speed
+### Core Functionality
 - **Git integration** with branch, status, and tracking info  
 - **Model display** with simplified Claude model names
 - **Usage tracking** based on transcript analysis
 - **Directory display** showing current workspace
 - **Minimal design** using Nerd Font icons
-- **Simple configuration** via command line options
+
+### Interactive TUI Features
+- **Interactive main menu** when executed without input
+- **TUI configuration interface** with real-time preview
+- **Theme system** with multiple built-in presets
+- **Segment customization** with granular control
+- **Configuration management** (init, check, edit)
+
+### Claude Code Enhancement
+- **Context warning disabler** - Remove annoying "Context low" messages
+- **Verbose mode enabler** - Enhanced output detail
+- **Robust patcher** - Survives Claude Code version updates
+- **Automatic backups** - Safe modification with easy recovery
 
 ## Installation
 
@@ -56,7 +68,8 @@ After installation:
 npm update -g @cometix/ccline
 ```
 
-### Manual Installation
+<details>
+<summary>Manual Installation (Click to expand)</summary>
 
 Alternatively, download from [Releases](https://github.com/Haleclipse/CCometixLine/releases):
 
@@ -82,7 +95,7 @@ chmod +x ~/.claude/ccline/ccline
 ```
 *Works on any Linux distribution (static, no dependencies)*
 
-### macOS (Intel)
+#### macOS (Intel)
 
 ```bash  
 mkdir -p ~/.claude/ccline
@@ -92,7 +105,7 @@ cp ccline ~/.claude/ccline/
 chmod +x ~/.claude/ccline/ccline
 ```
 
-### macOS (Apple Silicon)
+#### macOS (Apple Silicon)
 
 ```bash
 mkdir -p ~/.claude/ccline  
@@ -102,7 +115,7 @@ cp ccline ~/.claude/ccline/
 chmod +x ~/.claude/ccline/ccline
 ```
 
-### Windows
+#### Windows
 
 ```powershell
 # Create directory and download
@@ -111,6 +124,8 @@ Invoke-WebRequest -Uri "https://github.com/Haleclipse/CCometixLine/releases/late
 Expand-Archive -Path "ccline-windows-x64.zip" -DestinationPath "."
 Move-Item "ccline.exe" "$env:USERPROFILE\.claude\ccline\"
 ```
+
+</details>
 
 ### Claude Code Configuration
 
@@ -157,18 +172,44 @@ copy target\release\ccometixline.exe "$env:USERPROFILE\.claude\ccline\ccline.exe
 
 ## Usage
 
+### Configuration Management
+
 ```bash
-# Basic usage (displays all enabled segments)
-ccline
+# Initialize configuration file
+ccline --init
 
-# Show help
-ccline --help
+# Check configuration validity  
+ccline --check
 
-# Print default configuration  
-ccline --print-config
+# Print current configuration
+ccline --print
 
-# TUI configuration mode (planned)
-ccline --configure
+# Enter TUI configuration mode
+ccline --config
+```
+
+### Theme Override
+
+```bash
+# Temporarily use specific theme (overrides config file)
+ccline --theme cometix
+ccline --theme minimal
+ccline --theme gruvbox
+ccline --theme nord
+ccline --theme powerline-dark
+
+# Or use custom theme files from ~/.claude/ccline/themes/
+ccline --theme my-custom-theme
+```
+
+### Claude Code Enhancement
+
+```bash
+# Disable context warnings and enable verbose mode
+ccline --patch /path/to/claude-code/cli.js
+
+# Example for common installation
+ccline --patch ~/.local/share/fnm/node-versions/v24.4.1/installation/lib/node_modules/@anthropic-ai/claude-code/cli.js
 ```
 
 ## Default Segments
@@ -193,13 +234,23 @@ Token usage percentage based on transcript analysis with context limit tracking.
 
 ## Configuration
 
-Configuration support is planned for future releases. Currently uses sensible defaults for all segments.
+CCometixLine supports full configuration via TOML files and interactive TUI:
 
-## Performance
+- **Configuration file**: `~/.claude/ccline/config.toml`
+- **Interactive TUI**: `ccline --config` for real-time editing with preview
+- **Theme files**: `~/.claude/ccline/themes/*.toml` for custom themes
+- **Automatic initialization**: `ccline --init` creates default configuration
 
-- **Startup time**: < 50ms (vs ~200ms for TypeScript equivalents)
-- **Memory usage**: < 10MB (vs ~25MB for Node.js tools)
-- **Binary size**: ~2MB optimized release build
+### Available Segments
+
+All segments are configurable with:
+- Enable/disable toggle
+- Custom separators and icons
+- Color customization
+- Format options
+
+Supported segments: Directory, Git, Model, Usage, Time, Cost, OutputStyle
+
 
 ## Requirements
 
@@ -224,11 +275,11 @@ cargo build --release
 
 ## Roadmap
 
-- [ ] TOML configuration file support
-- [ ] TUI configuration interface
-- [ ] Custom themes
-- [ ] Plugin system
-- [ ] Cross-platform binaries
+- [x] TOML configuration file support
+- [x] TUI configuration interface
+- [x] Custom themes
+- [x] Interactive main menu
+- [x] Claude Code enhancement tools
 
 ## Contributing
 
