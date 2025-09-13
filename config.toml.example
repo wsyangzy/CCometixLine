@@ -1,0 +1,164 @@
+theme = "cometix"
+
+[style]
+mode = "nerd_font"
+separator = "  "
+
+[[segments]]
+id = "directory"
+enabled = true
+
+[segments.icon]
+plain = "📁"
+nerd_font = "󰉋"
+
+[segments.colors.icon]
+c16 = 10
+
+[segments.colors.text]
+c16 = 10
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+show_parent = false
+max_length = 30
+
+[[segments]]
+id = "model"
+enabled = true
+
+[segments.icon]
+plain = "🤖"
+nerd_font = ""
+
+[segments.colors.icon]
+c256 = 198
+
+[segments.colors.text]
+c256 = 198
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+
+[[segments]]
+id = "usage"
+enabled = true
+
+[segments.icon]
+plain = "⚡️"
+nerd_font = ""
+
+[segments.colors.icon]
+c256 = 215
+
+[segments.colors.text]
+c256 = 215
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+display_format = "bar"
+warning_threshold = 75
+critical_threshold = 90
+bar_show_percentage = true
+bar_show_tokens = true
+show_limit = true
+
+[[segments]]
+id = "git"
+enabled = true
+
+[segments.icon]
+plain = "🌿"
+nerd_font = "󰊢"
+
+[segments.colors.icon]
+c256 = 166
+
+[segments.colors.text]
+c256 = 166
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+show_sha = false
+show_remote = true
+status_format = "symbols"
+
+[[segments]]
+id = "session"
+enabled = true
+
+[segments.icon]
+plain = "⏱️"
+# nerd_font = "󱦻"
+# nerd_font = "󱉊"
+# nerd_font = "󰔠"
+nerd_font = ""
+
+[segments.colors.icon]
+c256 = 152
+
+[segments.colors.text]
+c256 = 152
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+show_idle_time = true
+time_format = "auto"
+compact_format = true
+show_line_changes = false
+
+[[segments]]
+id = "cost"
+enabled = true
+
+[segments.icon]
+plain = "💰"
+# nerd_font = ""
+nerd_font = ""
+
+[segments.colors.icon]
+c256 = 35
+
+[segments.colors.text]
+c256 = 35
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+show_breakdown = true
+currency_format = "auto"
+
+[[segments]]
+id = "output_style"
+enabled = true
+
+[segments.icon]
+plain = "🎯"
+# nerd_font = "󱋵"
+nerd_font = "󰔃"
+
+[segments.colors.icon]
+c256 = 38
+
+[segments.colors.text]
+c256 = 38
+
+[segments.styles]
+text_bold = true
+
+[segments.options]
+display_format = "custom"
+abbreviate_names = true
+show_description = false
+custom_names = { "engineer-professional" = "eng-pro" }

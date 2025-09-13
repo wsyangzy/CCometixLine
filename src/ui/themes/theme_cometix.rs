@@ -17,7 +17,13 @@ pub fn model_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("display_format".to_string(), serde_json::Value::String("name".to_string()));
+            opts.insert("show_version".to_string(), serde_json::Value::Bool(false));
+            opts.insert("abbreviate_names".to_string(), serde_json::Value::Bool(true));
+            opts
+        },
     }
 }
 
@@ -35,7 +41,15 @@ pub fn directory_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("max_length".to_string(), serde_json::Value::Number(serde_json::Number::from(20)));
+            opts.insert("show_full_path".to_string(), serde_json::Value::Bool(false));
+            opts.insert("abbreviate_home".to_string(), serde_json::Value::Bool(true));
+            opts.insert("show_parent".to_string(), serde_json::Value::Bool(false));
+            opts.insert("case_style".to_string(), serde_json::Value::String("original".to_string()));
+            opts
+        },
     }
 }
 
@@ -56,6 +70,13 @@ pub fn git_segment() -> SegmentConfig {
         options: {
             let mut opts = HashMap::new();
             opts.insert("show_sha".to_string(), serde_json::Value::Bool(false));
+            opts.insert("sha_length".to_string(), serde_json::Value::Number(serde_json::Number::from(7)));
+            opts.insert("show_remote".to_string(), serde_json::Value::Bool(true));
+            opts.insert("show_stash".to_string(), serde_json::Value::Bool(false));
+            opts.insert("show_tag".to_string(), serde_json::Value::Bool(false));
+            opts.insert("hide_clean_status".to_string(), serde_json::Value::Bool(false));
+            opts.insert("branch_max_length".to_string(), serde_json::Value::Number(serde_json::Number::from(20)));
+            opts.insert("status_format".to_string(), serde_json::Value::String("symbols".to_string()));
             opts
         },
     }
@@ -75,7 +96,18 @@ pub fn usage_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("display_format".to_string(), serde_json::Value::String("both".to_string()));
+            opts.insert("show_limit".to_string(), serde_json::Value::Bool(false));
+            opts.insert("warning_threshold".to_string(), serde_json::Value::Number(serde_json::Number::from(80)));
+            opts.insert("critical_threshold".to_string(), serde_json::Value::Number(serde_json::Number::from(95)));
+            opts.insert("compact_format".to_string(), serde_json::Value::Bool(true));
+            opts.insert("token_unit".to_string(), serde_json::Value::String("auto".to_string()));
+            opts.insert("bar_show_percentage".to_string(), serde_json::Value::Bool(true));
+            opts.insert("bar_show_tokens".to_string(), serde_json::Value::Bool(false));
+            opts
+        },
     }
 }
 
@@ -93,7 +125,15 @@ pub fn cost_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("currency_format".to_string(), serde_json::Value::String("auto".to_string()));
+            opts.insert("precision".to_string(), serde_json::Value::Number(serde_json::Number::from(2)));
+            opts.insert("show_breakdown".to_string(), serde_json::Value::Bool(false));
+            opts.insert("threshold_warning".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(1.0).unwrap()));
+            opts.insert("cumulative_display".to_string(), serde_json::Value::Bool(false));
+            opts
+        },
     }
 }
 
@@ -111,7 +151,15 @@ pub fn session_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("time_format".to_string(), serde_json::Value::String("auto".to_string()));
+            opts.insert("show_milliseconds".to_string(), serde_json::Value::Bool(false));
+            opts.insert("compact_format".to_string(), serde_json::Value::Bool(true));
+            opts.insert("show_idle_time".to_string(), serde_json::Value::Bool(false));
+            opts.insert("show_line_changes".to_string(), serde_json::Value::Bool(true));
+            opts
+        },
     }
 }
 
@@ -129,6 +177,12 @@ pub fn output_style_segment() -> SegmentConfig {
             background: None,
         },
         styles: TextStyleConfig { text_bold: true },
-        options: HashMap::new(),
+        options: {
+            let mut opts = HashMap::new();
+            opts.insert("display_format".to_string(), serde_json::Value::String("name".to_string()));
+            opts.insert("abbreviate_names".to_string(), serde_json::Value::Bool(false));
+            opts.insert("show_description".to_string(), serde_json::Value::Bool(false));
+            opts
+        },
     }
 }

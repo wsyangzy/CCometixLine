@@ -1,6 +1,191 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+// Usage Segment specific configuration types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum UsageDisplayFormat {
+    Percentage,
+    Tokens,
+    Both,
+    Bar,
+}
+
+impl Default for UsageDisplayFormat {
+    fn default() -> Self {
+        UsageDisplayFormat::Both
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum TokenUnit {
+    Auto,
+    K,
+    Raw,
+}
+
+impl Default for TokenUnit {
+    fn default() -> Self {
+        TokenUnit::Auto
+    }
+}
+
+// Directory Segment specific configuration types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum CaseStyle {
+    Original,
+    Lowercase,
+    Uppercase,
+}
+
+impl Default for CaseStyle {
+    fn default() -> Self {
+        CaseStyle::Original
+    }
+}
+
+// Directory Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct DirectorySegmentConfig {
+    pub max_length: usize,
+    pub show_full_path: bool,
+    pub abbreviate_home: bool,
+    pub show_parent: bool,
+    pub case_style: CaseStyle,
+}
+
+impl Default for DirectorySegmentConfig {
+    fn default() -> Self {
+        Self {
+            max_length: 20,
+            show_full_path: false,
+            abbreviate_home: true,
+            show_parent: false,
+            case_style: CaseStyle::Original,
+        }
+    }
+}
+
+impl DirectorySegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        config.max_length = options.get("max_length")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.max(5).min(100) as usize)
+            .unwrap_or(config.max_length);
+            
+        config.show_full_path = options.get("show_full_path")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_full_path);
+            
+        config.abbreviate_home = options.get("abbreviate_home")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.abbreviate_home);
+            
+        config.show_parent = options.get("show_parent")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_parent);
+            
+        if let Some(case_value) = options.get("case_style") {
+            if let Ok(case_style) = serde_json::from_value::<CaseStyle>(case_value.clone()) {
+                config.case_style = case_style;
+            }
+        }
+        
+        config
+    }
+}
+
+// Git Segment specific configuration types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum GitStatusFormat {
+    Symbols,
+    Text,
+    Count,
+}
+
+impl Default for GitStatusFormat {
+    fn default() -> Self {
+        GitStatusFormat::Symbols
+    }
+}
+
+// Git Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct GitSegmentConfig {
+    pub show_sha: bool,
+    pub sha_length: u8,
+    pub show_remote: bool,
+    pub show_stash: bool,
+    pub show_tag: bool,
+    pub hide_clean_status: bool,
+    pub branch_max_length: usize,
+    pub status_format: GitStatusFormat,
+}
+
+impl Default for GitSegmentConfig {
+    fn default() -> Self {
+        Self {
+            show_sha: false,
+            sha_length: 7,
+            show_remote: false,
+            show_stash: false,
+            show_tag: false,
+            hide_clean_status: false,
+            branch_max_length: 15,
+            status_format: GitStatusFormat::Symbols,
+        }
+    }
+}
+
+impl GitSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        config.show_sha = options.get("show_sha")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_sha);
+            
+        config.sha_length = options.get("sha_length")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.max(4).min(40) as u8)
+            .unwrap_or(config.sha_length);
+            
+        config.show_remote = options.get("show_remote")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_remote);
+            
+        config.show_stash = options.get("show_stash")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_stash);
+            
+        config.show_tag = options.get("show_tag")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_tag);
+            
+        config.hide_clean_status = options.get("hide_clean_status")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.hide_clean_status);
+            
+        config.branch_max_length = options.get("branch_max_length")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.max(5).min(50) as usize)
+            .unwrap_or(config.branch_max_length);
+            
+        if let Some(format_value) = options.get("status_format") {
+            if let Ok(format) = serde_json::from_value::<GitStatusFormat>(format_value.clone()) {
+                config.status_format = format;
+            }
+        }
+        
+        config
+    }
+}
+
 // Main config structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -391,6 +576,317 @@ impl RawUsage {
         result.calculation_source = sources.join("+");
 
         result
+    }
+}
+
+// Usage Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct UsageSegmentConfig {
+    pub display_format: UsageDisplayFormat,
+    pub show_limit: bool,
+    pub warning_threshold: u8,
+    pub critical_threshold: u8,
+    pub compact_format: bool,
+    pub token_unit: TokenUnit,
+    pub bar_show_percentage: bool,
+    pub bar_show_tokens: bool,
+}
+
+impl Default for UsageSegmentConfig {
+    fn default() -> Self {
+        Self {
+            display_format: UsageDisplayFormat::Both,
+            show_limit: false,
+            warning_threshold: 80,
+            critical_threshold: 95,
+            compact_format: true,
+            token_unit: TokenUnit::Auto,
+            bar_show_percentage: true,
+            bar_show_tokens: false,
+        }
+    }
+}
+
+impl UsageSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        if let Some(format_value) = options.get("display_format") {
+            if let Ok(format) = serde_json::from_value::<UsageDisplayFormat>(format_value.clone()) {
+                config.display_format = format;
+            }
+        }
+        
+        config.show_limit = options.get("show_limit")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_limit);
+            
+        config.warning_threshold = options.get("warning_threshold")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.min(100) as u8)
+            .unwrap_or(config.warning_threshold);
+            
+        config.critical_threshold = options.get("critical_threshold")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.min(100) as u8)
+            .unwrap_or(config.critical_threshold);
+            
+        config.compact_format = options.get("compact_format")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.compact_format);
+            
+        if let Some(unit_value) = options.get("token_unit") {
+            if let Ok(unit) = serde_json::from_value::<TokenUnit>(unit_value.clone()) {
+                config.token_unit = unit;
+            }
+        }
+        
+        config.bar_show_percentage = options.get("bar_show_percentage")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.bar_show_percentage);
+            
+        config.bar_show_tokens = options.get("bar_show_tokens")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.bar_show_tokens);
+        
+        config
+    }
+}
+
+// Model Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct ModelSegmentConfig {
+    pub display_format: ModelDisplayFormat,
+    pub show_version: bool,
+    pub abbreviate_names: bool,
+    pub custom_names: std::collections::HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelDisplayFormat {
+    Name,      // 仅显示模型名称
+    Full,      // 显示完整信息
+    Custom,    // 使用自定义名称
+}
+
+impl Default for ModelSegmentConfig {
+    fn default() -> Self {
+        Self {
+            display_format: ModelDisplayFormat::Name,
+            show_version: false,
+            abbreviate_names: true,
+            custom_names: std::collections::HashMap::new(),
+        }
+    }
+}
+
+impl ModelSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        if let Some(format_value) = options.get("display_format") {
+            if let Ok(format) = serde_json::from_value::<ModelDisplayFormat>(format_value.clone()) {
+                config.display_format = format;
+            }
+        }
+        
+        config.show_version = options.get("show_version")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_version);
+            
+        config.abbreviate_names = options.get("abbreviate_names")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.abbreviate_names);
+            
+        if let Some(names_value) = options.get("custom_names") {
+            if let Ok(names) = serde_json::from_value::<std::collections::HashMap<String, String>>(names_value.clone()) {
+                config.custom_names = names;
+            }
+        }
+        
+        config
+    }
+}
+
+// Session Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct SessionSegmentConfig {
+    pub time_format: TimeFormat,
+    pub show_milliseconds: bool,
+    pub compact_format: bool,
+    pub show_idle_time: bool,
+    pub show_line_changes: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TimeFormat {
+    Auto,      // 自动选择最合适的单位
+    Short,     // 简短格式 (1m30s)
+    Long,      // 完整格式 (1 min 30 sec)
+    Digital,   // 数字格式 (01:30)
+}
+
+impl Default for SessionSegmentConfig {
+    fn default() -> Self {
+        Self {
+            time_format: TimeFormat::Auto,
+            show_milliseconds: false,
+            compact_format: true,
+            show_idle_time: false,
+            show_line_changes: true,
+        }
+    }
+}
+
+impl SessionSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        if let Some(format_value) = options.get("time_format") {
+            if let Ok(format) = serde_json::from_value::<TimeFormat>(format_value.clone()) {
+                config.time_format = format;
+            }
+        }
+        
+        config.show_milliseconds = options.get("show_milliseconds")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_milliseconds);
+            
+        config.compact_format = options.get("compact_format")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.compact_format);
+            
+        config.show_idle_time = options.get("show_idle_time")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_idle_time);
+        
+        config.show_line_changes = options.get("show_line_changes")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_line_changes);
+        
+        config
+    }
+}
+
+// OutputStyle Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct OutputStyleSegmentConfig {
+    pub display_format: OutputStyleDisplayFormat,
+    pub abbreviate_names: bool,
+    pub show_description: bool,
+    pub custom_names: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OutputStyleDisplayFormat {
+    Name,        // 只显示名称
+    Full,        // 显示完整信息
+    Abbreviated, // 显示缩写
+    Custom,      // 使用自定义名称映射
+}
+
+impl Default for OutputStyleSegmentConfig {
+    fn default() -> Self {
+        Self {
+            display_format: OutputStyleDisplayFormat::Name,
+            abbreviate_names: false,
+            show_description: false,
+            custom_names: HashMap::new(),
+        }
+    }
+}
+
+impl OutputStyleSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        if let Some(format_value) = options.get("display_format") {
+            if let Ok(format) = serde_json::from_value::<OutputStyleDisplayFormat>(format_value.clone()) {
+                config.display_format = format;
+            }
+        }
+        
+        config.abbreviate_names = options.get("abbreviate_names")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.abbreviate_names);
+            
+        config.show_description = options.get("show_description")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_description);
+        
+        // Parse custom_names if provided
+        if let Some(custom_names_value) = options.get("custom_names") {
+            if let Ok(custom_names) = serde_json::from_value::<HashMap<String, String>>(custom_names_value.clone()) {
+                config.custom_names = custom_names;
+            }
+        }
+        
+        config
+    }
+}
+
+// Cost Segment configuration helper
+#[derive(Debug, Clone)]
+pub struct CostSegmentConfig {
+    pub currency_format: CurrencyFormat,
+    pub precision: u8,
+    pub show_breakdown: bool,
+    pub threshold_warning: f64,
+    pub cumulative_display: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CurrencyFormat {
+    Auto,       // 自动格式 ($0.05 或 $1.50)
+    Fixed,      // 固定小数位 ($0.05)
+    Compact,    // 紧凑格式 (5¢ 或 $1.5)
+    Scientific, // 科学记数法 (5e-2)
+}
+
+impl Default for CostSegmentConfig {
+    fn default() -> Self {
+        Self {
+            currency_format: CurrencyFormat::Auto,
+            precision: 2,
+            show_breakdown: false,
+            threshold_warning: 1.0,
+            cumulative_display: false,
+        }
+    }
+}
+
+impl CostSegmentConfig {
+    pub fn from_options(options: &HashMap<String, serde_json::Value>) -> Self {
+        let mut config = Self::default();
+        
+        if let Some(format_value) = options.get("currency_format") {
+            if let Ok(format) = serde_json::from_value::<CurrencyFormat>(format_value.clone()) {
+                config.currency_format = format;
+            }
+        }
+        
+        config.precision = options.get("precision")
+            .and_then(|v| v.as_u64())
+            .map(|v| v.min(6) as u8)
+            .unwrap_or(config.precision);
+            
+        config.show_breakdown = options.get("show_breakdown")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.show_breakdown);
+            
+        config.threshold_warning = options.get("threshold_warning")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(config.threshold_warning);
+            
+        config.cumulative_display = options.get("cumulative_display")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(config.cumulative_display);
+        
+        config
     }
 }
 

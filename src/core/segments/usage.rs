@@ -1,16 +1,25 @@
 use super::{Segment, SegmentData};
-use crate::config::{InputData, ModelConfig, SegmentId, TranscriptEntry};
+use crate::config::{InputData, ModelConfig, SegmentId, TranscriptEntry, UsageSegmentConfig, UsageDisplayFormat, TokenUnit};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 #[derive(Default)]
-pub struct UsageSegment;
+pub struct UsageSegment {
+    config: UsageSegmentConfig,
+}
 
 impl UsageSegment {
     pub fn new() -> Self {
-        Self
+        Self {
+            config: UsageSegmentConfig::default(),
+        }
+    }
+    
+    pub fn with_config(mut self, options: &HashMap<String, serde_json::Value>) -> Self {
+        self.config = UsageSegmentConfig::from_options(options);
+        self
     }
 
     /// Get context limit for the specified model
@@ -18,6 +27,91 @@ impl UsageSegment {
         let model_config = ModelConfig::load();
         model_config.get_context_limit(model_id)
     }
+    
+    /// Format tokens according to the configuration
+    fn format_tokens(&self, tokens: u32) -> String {
+        match self.config.token_unit {
+            TokenUnit::Raw => tokens.to_string(),
+            TokenUnit::K => {
+                let k_value = tokens as f64 / 1000.0;
+                if k_value.fract() == 0.0 {
+                    format!("{}k", k_value as u32)
+                } else {
+                    format!("{:.1}k", k_value)
+                }
+            }
+            TokenUnit::Auto => {
+                if tokens >= 1000 {
+                    let k_value = tokens as f64 / 1000.0;
+                    if k_value.fract() == 0.0 {
+                        format!("{}k", k_value as u32)
+                    } else {
+                        format!("{:.1}k", k_value)
+                    }
+                } else {
+                    tokens.to_string()
+                }
+            }
+        }
+    }
+    
+    /// Format percentage with appropriate precision
+    fn format_percentage(&self, percentage: f64) -> String {
+        if percentage.fract() == 0.0 {
+            format!("{:.0}%", percentage)
+        } else {
+            format!("{:.1}%", percentage)
+        }
+    }
+    
+    /// Generate progress bar for display
+    fn generate_progress_bar(&self, percentage: f64, tokens: u32, limit: u32) -> String {
+        let bar_width = 10;
+        let filled = (percentage / 10.0).round() as usize;
+        let filled = filled.min(bar_width);
+        let empty = bar_width - filled;
+        
+        let bar = format!("{}{}", 
+            "█".repeat(filled),
+            "░".repeat(empty)
+        );
+        
+        let mut parts = vec![bar];
+        
+        if self.config.bar_show_percentage {
+            parts.push(format!("{:.0}%", percentage));
+        }
+        
+        if self.config.bar_show_tokens {
+            let tokens_str = self.format_tokens(tokens);
+            if self.config.show_limit {
+                let limit_str = self.format_tokens(limit);
+                parts.push(format!("{}/{}", tokens_str, limit_str));
+            } else {
+                parts.push(tokens_str);
+            }
+        }
+        
+        parts.join(" ")
+    }
+    
+    /// Determine usage status based on thresholds
+    fn get_usage_status(&self, percentage: f64) -> UsageStatus {
+        if percentage >= self.config.critical_threshold as f64 {
+            UsageStatus::Critical
+        } else if percentage >= self.config.warning_threshold as f64 {
+            UsageStatus::Warning
+        } else {
+            UsageStatus::Normal
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum UsageStatus {
+    Normal,
+    Warning,
+    Critical,
 }
 
 impl Segment for UsageSegment {
@@ -27,32 +121,52 @@ impl Segment for UsageSegment {
 
         let context_used_token_opt = parse_transcript_usage(&input.transcript_path);
 
-        let (percentage_display, tokens_display) = match context_used_token_opt {
+        let (primary_display, secondary_display) = match context_used_token_opt {
             Some(context_used_token) => {
                 let context_used_rate = (context_used_token as f64 / context_limit as f64) * 100.0;
 
-                let percentage = if context_used_rate.fract() == 0.0 {
-                    format!("{:.0}%", context_used_rate)
-                } else {
-                    format!("{:.1}%", context_used_rate)
+                let percentage_str = self.format_percentage(context_used_rate);
+                let tokens_str = self.format_tokens(context_used_token);
+
+                let primary = match self.config.display_format {
+                    UsageDisplayFormat::Percentage => percentage_str.clone(),
+                    UsageDisplayFormat::Tokens => {
+                        if self.config.show_limit {
+                            let limit_str = self.format_tokens(context_limit);
+                            format!("{}/{}", tokens_str, limit_str)
+                        } else {
+                            tokens_str.clone()
+                        }
+                    },
+                    UsageDisplayFormat::Both => {
+                        let separator = if self.config.compact_format { "·" } else { " · " };
+                        let tokens_part = if self.config.show_limit {
+                            let limit_str = self.format_tokens(context_limit);
+                            format!("{}/{}", tokens_str, limit_str)
+                        } else {
+                            format!("{} tokens", tokens_str)
+                        };
+                        format!("{}{}{}", percentage_str, separator, tokens_part)
+                    },
+                    UsageDisplayFormat::Bar => {
+                        self.generate_progress_bar(context_used_rate, context_used_token, context_limit)
+                    },
                 };
 
-                let tokens = if context_used_token >= 1000 {
-                    let k_value = context_used_token as f64 / 1000.0;
-                    if k_value.fract() == 0.0 {
-                        format!("{}k", k_value as u32)
-                    } else {
-                        format!("{:.1}k", k_value)
-                    }
+                let secondary = if self.config.show_limit && 
+                    self.config.display_format != UsageDisplayFormat::Tokens &&
+                    !(self.config.display_format == UsageDisplayFormat::Bar && self.config.bar_show_tokens && self.config.show_limit) {
+                    let limit_str = self.format_tokens(context_limit);
+                    format!("/{}", limit_str)
                 } else {
-                    context_used_token.to_string()
+                    String::new()
                 };
 
-                (percentage, tokens)
+                (primary, secondary)
             }
             None => {
                 // No usage data available
-                ("-".to_string(), "-".to_string())
+                ("-".to_string(), String::new())
             }
         };
 
@@ -60,20 +174,27 @@ impl Segment for UsageSegment {
         match context_used_token_opt {
             Some(context_used_token) => {
                 let context_used_rate = (context_used_token as f64 / context_limit as f64) * 100.0;
+                let usage_status = self.get_usage_status(context_used_rate);
+                
                 metadata.insert("tokens".to_string(), context_used_token.to_string());
                 metadata.insert("percentage".to_string(), context_used_rate.to_string());
+                metadata.insert("status".to_string(), format!("{:?}", usage_status));
+                metadata.insert("warning_threshold".to_string(), self.config.warning_threshold.to_string());
+                metadata.insert("critical_threshold".to_string(), self.config.critical_threshold.to_string());
             }
             None => {
                 metadata.insert("tokens".to_string(), "-".to_string());
                 metadata.insert("percentage".to_string(), "-".to_string());
+                metadata.insert("status".to_string(), "Unknown".to_string());
             }
         }
         metadata.insert("limit".to_string(), context_limit.to_string());
         metadata.insert("model".to_string(), input.model.id.clone());
+        metadata.insert("display_format".to_string(), format!("{:?}", self.config.display_format));
 
         Some(SegmentData {
-            primary: format!("{} · {} tokens", percentage_display, tokens_display),
-            secondary: String::new(),
+            primary: primary_display,
+            secondary: secondary_display,
             metadata,
         })
     }

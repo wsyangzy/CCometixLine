@@ -461,36 +461,31 @@ pub fn collect_all_segments(
     for segment_config in &config.segments {
         let segment_data = match segment_config.id {
             crate::config::SegmentId::Model => {
-                let segment = ModelSegment::new();
+                let segment = ModelSegment::with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Directory => {
-                let segment = DirectorySegment::new();
+                let segment = DirectorySegment::new().with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Git => {
-                let show_sha = segment_config
-                    .options
-                    .get("show_sha")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false);
-                let segment = GitSegment::new().with_sha(show_sha);
+                let segment = GitSegment::with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Usage => {
-                let segment = UsageSegment::new();
+                let segment = UsageSegment::new().with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Cost => {
-                let segment = CostSegment::new();
+                let segment = CostSegment::with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Session => {
-                let segment = SessionSegment::new();
+                let segment = SessionSegment::with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::OutputStyle => {
-                let segment = OutputStyleSegment::new();
+                let segment = OutputStyleSegment::with_config(&segment_config.options);
                 segment.collect(input)
             }
             crate::config::SegmentId::Update => {

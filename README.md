@@ -16,18 +16,28 @@ The statusline shows: Model | Directory | Git Branch Status | Context Window Inf
 ## Features
 
 ### Core Functionality
-- **Git integration** with branch, status, and tracking info  
-- **Model display** with simplified Claude model names
-- **Usage tracking** based on transcript analysis
-- **Directory display** showing current workspace
-- **Minimal design** using Nerd Font icons
+- **Advanced Git integration** with branch, status, tracking, SHA display, and remote status
+- **Smart model display** with custom name mapping and multiple display formats
+- **Enhanced usage tracking** with progress bars, warning thresholds, and flexible token units  
+- **Flexible directory display** with path truncation, case styling, and parent directory options
+- **Comprehensive session tracking** with multiple time formats and idle time monitoring
+- **Detailed cost tracking** with multiple currency formats and precision control
+- **Minimal design** using Nerd Font icons with customizable separators
 
 ### Interactive TUI Features
 - **Interactive main menu** when executed without input
-- **TUI configuration interface** with real-time preview
-- **Theme system** with multiple built-in presets
-- **Segment customization** with granular control
-- **Configuration management** (init, check, edit)
+- **Advanced TUI configuration interface** with real-time preview and intelligent controls
+- **Rich theme system** with multiple built-in presets and custom theme support
+- **Granular segment customization** with extensive configuration options for each segment
+- **Smart configuration management** with validation, defaults, and reset functions
+
+### Extended Configuration Options
+- **Usage Segment**: Progress bar controls, warning thresholds, token unit selection, bar percentage/token display
+- **Model Segment**: Display formats (name/full/custom), version info, abbreviation, custom name mapping
+- **Session Segment**: Time formats (auto/short/long/digital), milliseconds, compact mode, idle time tracking  
+- **Cost Segment**: Currency formats (auto/fixed/compact/scientific), precision control, cost breakdown, warning thresholds
+- **Git Segment**: SHA display control, remote status, stash count, tag display, status formats, branch length limits
+- **Directory Segment**: Path length limits, case styling, full path toggle, parent directory display, home abbreviation
 
 ### Claude Code Enhancement
 - **Context warning disabler** - Remove annoying "Context low" messages
@@ -246,22 +256,74 @@ Token usage percentage based on transcript analysis with context limit tracking.
 
 ## Configuration
 
-CCometixLine supports full configuration via TOML files and interactive TUI:
+CCometixLine supports comprehensive configuration via TOML files and interactive TUI:
 
 - **Configuration file**: `~/.claude/ccline/config.toml`
 - **Interactive TUI**: `ccline --config` for real-time editing with preview
 - **Theme files**: `~/.claude/ccline/themes/*.toml` for custom themes
+- **Enhanced examples**: [`example_enhanced.toml`](example_enhanced.toml) showcases all configuration options
 - **Automatic initialization**: `ccline --init` creates default configuration
 
 ### Available Segments
 
-All segments are configurable with:
-- Enable/disable toggle
-- Custom separators and icons
-- Color customization
-- Format options
+All segments support extensive customization with:
+- **Basic controls**: Enable/disable toggle, custom separators and icons, color customization
+- **Extended options**: Segment-specific advanced configuration for fine-tuned control
 
-Supported segments: Directory, Git, Model, Usage, Time, Cost, OutputStyle
+#### Supported Segments with Extended Options:
+
+- **Directory**: Path display control, case styling, length limits, parent directory toggle
+- **Git**: Branch info, status formats, SHA display, remote tracking, stash/tag information  
+- **Model**: Display formats, custom name mapping, version info, abbreviation controls
+- **Usage**: Progress bars with customizable elements, warning thresholds, token unit selection
+- **Session**: Multiple time formats, millisecond precision, compact mode, idle time tracking
+- **Cost**: Currency formatting, precision control, breakdown display, warning thresholds
+- **OutputStyle**: Output format display (basic configuration only)
+
+### Quick Configuration Examples
+
+#### Usage Segment with Progress Bar
+```toml
+[[segments]]
+id = "usage"
+enabled = true
+
+[segments.options]
+display_format = "bar"           # Enable progress bar mode
+bar_show_percentage = true       # Show percentage
+bar_show_tokens = true          # Show token count
+show_limit = true               # Show total limit
+warning_threshold = 75          # Warning at 75%
+critical_threshold = 90         # Critical at 90%
+```
+
+#### Git Segment with Rich Information
+```toml
+[[segments]]
+id = "git" 
+enabled = true
+
+[segments.options]
+show_sha = true                 # Show commit SHA
+sha_length = 7                  # SHA length
+show_remote = true              # Show remote status
+show_stash = true              # Show stash count
+status_format = "symbols"       # Use symbols for status
+```
+
+#### Model Segment with Custom Names
+```toml
+[[segments]]
+id = "model"
+enabled = true
+
+[segments.options]
+display_format = "custom"       # Use custom mapping
+abbreviate_names = true         # Use abbreviations
+# Custom name mapping in [segments.options.custom_names] table
+```
+
+For complete configuration examples, see [`example_enhanced.toml`](example_enhanced.toml).
 
 
 ## Requirements
@@ -288,10 +350,22 @@ cargo build --release
 ## Roadmap
 
 - [x] TOML configuration file support
-- [x] TUI configuration interface
+- [x] TUI configuration interface  
 - [x] Custom themes
 - [x] Interactive main menu
 - [x] Claude Code enhancement tools
+- [x] **Extended segment configuration options**
+  - [x] Progress bar controls for Usage segment
+  - [x] Custom model name mapping
+  - [x] Multiple time formats for Session segment
+  - [x] Currency formatting for Cost segment
+  - [x] Enhanced Git status display options
+  - [x] Directory path display controls
+- [x] **Advanced TUI interface improvements**
+  - [x] Intelligent control selection based on option type
+  - [x] Real-time configuration validation
+  - [x] Enhanced preview capabilities
+  - [x] Quick reset functionality
 
 ## Contributing
 
