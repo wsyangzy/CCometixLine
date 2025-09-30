@@ -137,6 +137,18 @@ impl Default for ModelConfig {
                     display_name: "Sonnet 4 1M".to_string(),
                     context_limit: 1_000_000,
                 },
+                // Sonnet 4.5 (more specific pattern, must come before sonnet-4)
+                ModelEntry {
+                    pattern: "claude-sonnet-4-5".to_string(),
+                    display_name: "Sonnet 4.5".to_string(),
+                    context_limit: 200_000,
+                },
+                ModelEntry {
+                    pattern: "sonnet-4-5".to_string(),
+                    display_name: "Sonnet 4.5".to_string(),
+                    context_limit: 200_000,
+                },
+                // Sonnet 4 (more general pattern, must come after 4.5)
                 ModelEntry {
                     pattern: "claude-sonnet-4".to_string(),
                     display_name: "Sonnet 4".to_string(),
