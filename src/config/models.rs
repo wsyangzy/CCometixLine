@@ -59,14 +59,40 @@ impl ModelConfig {
 
     /// Get context limit for a model based on ID pattern matching
     /// Checks external config first, then falls back to built-in config
+    ///
+    /// Special handling for [1m] suffix: returns 1M context limit for models with this suffix
     pub fn get_context_limit(&self, model_id: &str) -> u32 {
         let model_lower = model_id.to_lowercase();
 
-        // Check model entries
+        // Check if model has [1m] suffix
+        let has_1m = model_lower.contains("[1m]");
+
+        // If has [1m] suffix, remove it for base model matching
+        let match_id = if has_1m {
+            model_lower.replace("[1m]", "")
+        } else {
+            model_lower.clone()
+        };
+
+        // Match base model (skip the generic [1m] pattern)
         for entry in &self.model_entries {
-            if model_lower.contains(&entry.pattern.to_lowercase()) {
-                return entry.context_limit;
+            // Skip the generic [1m] pattern to avoid early matching
+            if entry.pattern == "[1m]" {
+                continue;
             }
+
+            if match_id.contains(&entry.pattern.to_lowercase()) {
+                return if has_1m {
+                    1_000_000 // Override with 1M context for [1m] suffix
+                } else {
+                    entry.context_limit
+                };
+            }
+        }
+
+        // If no match found but has [1m] suffix, return 1M context
+        if has_1m {
+            return 1_000_000;
         }
 
         200_000
@@ -75,14 +101,41 @@ impl ModelConfig {
     /// Get display name for a model based on ID pattern matching
     /// Checks external config first, then falls back to built-in config
     /// Returns None if no match found (should use fallback display_name)
+    ///
+    /// Special handling for [1m] suffix: automatically appends " 1M" to the base model name
     pub fn get_display_name(&self, model_id: &str) -> Option<String> {
         let model_lower = model_id.to_lowercase();
 
-        // Check model entries
+        // Check if model has [1m] suffix
+        let has_1m = model_lower.contains("[1m]");
+
+        // If has [1m] suffix, remove it for base model matching
+        let match_id = if has_1m {
+            model_lower.replace("[1m]", "")
+        } else {
+            model_lower.clone()
+        };
+
+        // Match base model (skip the generic [1m] pattern)
         for entry in &self.model_entries {
-            if model_lower.contains(&entry.pattern.to_lowercase()) {
-                return Some(entry.display_name.clone());
+            // Skip the generic [1m] pattern to avoid early matching
+            if entry.pattern == "[1m]" {
+                continue;
             }
+
+            if match_id.contains(&entry.pattern.to_lowercase()) {
+                let base_name = entry.display_name.clone();
+                return Some(if has_1m {
+                    format!("{} 1M", base_name) // Append " 1M" suffix
+                } else {
+                    base_name
+                });
+            }
+        }
+
+        // If no match found but has [1m] suffix, use generic 1M display
+        if has_1m {
+            return Some("Sonnet 4 1M".to_string());
         }
 
         None
@@ -131,12 +184,6 @@ impl Default for ModelConfig {
     fn default() -> Self {
         Self {
             model_entries: vec![
-                // 1M context models (put first for priority matching)
-                ModelEntry {
-                    pattern: "[1m]".to_string(),
-                    display_name: "Sonnet 4 1M".to_string(),
-                    context_limit: 1_000_000,
-                },
                 // Sonnet 4.5 (more specific pattern, must come before sonnet-4)
                 ModelEntry {
                     pattern: "claude-sonnet-4-5".to_string(),
@@ -157,6 +204,23 @@ impl Default for ModelConfig {
                 ModelEntry {
                     pattern: "claude-4-sonnet".to_string(),
                     display_name: "Sonnet 4".to_string(),
+                    context_limit: 200_000,
+                },
+                // Opus 4.6 (more specific pattern, must come before opus-4)
+                ModelEntry {
+                    pattern: "claude-opus-4-6".to_string(),
+                    display_name: "Opus 4.6".to_string(),
+                    context_limit: 200_000,
+                },
+                ModelEntry {
+                    pattern: "opus-4-6".to_string(),
+                    display_name: "Opus 4.6".to_string(),
+                    context_limit: 200_000,
+                },
+                // Opus 4 (generic patterns)
+                ModelEntry {
+                    pattern: "claude-opus-4".to_string(),
+                    display_name: "Opus 4".to_string(),
                     context_limit: 200_000,
                 },
                 ModelEntry {
@@ -195,7 +259,34 @@ impl Default for ModelConfig {
                     display_name: "Qwen Coder".to_string(),
                     context_limit: 256_000,
                 },
+                // Generic [1m] suffix fallback (automatically handled by matching logic)
+                // This pattern is skipped during matching but serves as documentation
+                // The actual [1m] detection is handled by get_display_name and get_context_limit
+                ModelEntry {
+                    pattern: "[1m]".to_string(),
+                    display_name: "Sonnet 4 1M".to_string(),
+                    context_limit: 1_000_000,
+                },
             ],
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ModelConfig;
+
+    #[test]
+    fn maps_opus_4_6_model_name() {
+        let config = ModelConfig::default();
+        let display_name = config.get_display_name("claude-opus-4-6-20260101");
+        assert_eq!(display_name, Some("Opus 4.6".to_string()));
+    }
+
+    #[test]
+    fn maps_opus_4_6_1m_model_name() {
+        let config = ModelConfig::default();
+        let display_name = config.get_display_name("claude-opus-4-6-20260101[1m]");
+        assert_eq!(display_name, Some("Opus 4.6 1M".to_string()));
     }
 }
