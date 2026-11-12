@@ -249,6 +249,35 @@ Displays: `Directory | Git Branch Status | Model | Context Window`
 Shows simplified Claude model names:
 - `claude-3-5-sonnet` → `Sonnet 3.5`
 - `claude-4-sonnet` → `Sonnet 4`
+- `claude-fable-5-2` → `Fable 5.2`
+- `claude-opus-5-5` → `Opus 5.5` (200K context)
+- `claude-opus-5-5[1m]` → `Opus 5.5 1M` (1M context)
+
+The built-in catalog lives in the repository-root [`models.toml`](models.toml), including Claude families and GLM, Kimi, and Qwen names, aliases, and context limits. It is embedded in the executable at compile time, so no companion file is needed after installation. To add a model, edit this file, run `cargo test` and `cargo build --release`, then replace the installed executable. No Rust changes are needed. For example:
+
+```toml
+[[models]]
+pattern = "claude-fable-5-2"
+aliases = ["fable-5-2", "claude-5-2-fable"]
+match_mode = "model_id"
+display_name = "Fable 5.2"
+context_limit = 200000
+```
+
+`aliases` is optional. `match_mode = "model_id"` matches complete IDs, allowing dates and named suffixes such as `latest` and `preview`, while preventing `Fable 5` from matching `Fable 5.2`. Omitting the mode retains case-insensitive substring matching. The first matching entry wins.
+
+Name resolution uses **user overrides → embedded catalog → automatic Claude parsing → the display name supplied by Claude Code**. Automatic parsing continues to support new versions/families, legacy IDs, and `[1m]`.
+
+For custom names, unusual model IDs, or different context limits, edit `~/.claude/ccline/models.toml` (on Windows: `%USERPROFILE%\.claude\ccline\models.toml`):
+
+```toml
+[[models]]
+pattern = "claude-fable-5-2"
+display_name = "Fable 5.2"
+context_limit = 200000
+```
+
+If the file contains `models = []`, replace that line with the entries above. User overrides use the same format as the catalog, including optional `aliases` and `match_mode`. Omitting the mode preserves substring matching, so place specific rules before broad ones. Only entries that need overriding are required; empty, missing, or invalid user files retain the built-in catalog. Changes apply on the next statusline invocation without rebuilding or reinstalling. Unconfigured context limits default to 200K; `[1m]` appends `1M` to recognized names and sets the context limit to 1M. Automatic name parsing does not determine a model's actual context capacity.
 
 ### Context Window Display
 

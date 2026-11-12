@@ -16,15 +16,17 @@
 ## 特性
 
 ### 核心功能
+
 - **高级Git集成** 分支、状态、跟踪、SHA显示和远程状态
 - **智能模型显示** 自定义名称映射和多种显示格式
-- **增强使用量跟踪** 进度条、警告阈值和灵活的令牌单位  
+- **增强使用量跟踪** 进度条、警告阈值和灵活的令牌单位
 - **灵活目录显示** 路径截断、大小写样式和父目录选项
 - **全面会话跟踪** 多种时间格式和空闲时间监控
 - **详细成本跟踪** 多种货币格式和精度控制
 - **简洁设计** 使用 Nerd Font 图标和可自定义分隔符
 
 ### 交互式 TUI 功能
+
 - **交互式主菜单** 无输入时直接执行显示菜单
 - **高级TUI配置界面** 实时预览和智能控件
 - **丰富主题系统** 多种内置预设和自定义主题支持
@@ -32,14 +34,16 @@
 - **智能配置管理** 验证、默认值和重置功能
 
 ### 扩展配置选项
+
 - **使用量段**: 进度条控制、警告阈值、令牌单位选择、进度条百分比/令牌显示
 - **模型段**: 显示格式（名称/完整/自定义）、版本信息、缩写、自定义名称映射
-- **会话段**: 时间格式（自动/短/长/数字）、毫秒显示、紧凑模式、空闲时间跟踪  
+- **会话段**: 时间格式（自动/短/长/数字）、毫秒显示、紧凑模式、空闲时间跟踪
 - **成本段**: 货币格式（自动/固定/紧凑/科学计数法）、精度控制、成本分解、警告阈值
 - **Git段**: SHA显示控制、远程状态、存储计数、标签显示、状态格式、分支长度限制
 - **目录段**: 路径长度限制、大小写样式、完整路径切换、父目录显示、主目录缩写
 
 ### Claude Code 增强
+
 - **禁用上下文警告** 移除烦人的"Context low"消息
 - **启用详细模式** 增强输出详细信息
 - **稳定补丁器** 适应 Claude Code 版本更新
@@ -63,11 +67,13 @@ pnpm add -g @cometix/ccline
 ```
 
 使用镜像源加速下载：
+
 ```bash
 npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 ```
 
 安装后：
+
 - ✅ 全局命令 `ccline` 可在任何地方使用
 - ⚙️ 按照下方提示进行配置以集成到 Claude Code
 - 🎨 运行 `ccline -c` 打开配置面板进行主题选择
@@ -77,6 +83,7 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 添加到 Claude Code `settings.json`：
 
 **Linux/macOS:**
+
 ```json
 {
   "statusLine": {
@@ -88,6 +95,7 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 ```
 
 **Windows:**
+
 ```json
 {
   "statusLine": {
@@ -99,6 +107,7 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
 ```
 
 **后备方案 (npm 安装):**
+
 ```json
 {
   "statusLine": {
@@ -108,6 +117,7 @@ npm install -g @cometix/ccline --registry https://registry.npmmirror.com
   }
 }
 ```
+
 *如果 npm 全局安装已在 PATH 中可用，则使用此配置*
 
 ### 更新
@@ -124,6 +134,7 @@ npm update -g @cometix/ccline
 #### Linux
 
 #### 选项 1: 动态链接版本（推荐）
+
 ```bash
 mkdir -p ~/.claude/ccline
 wget https://github.com/Haleclipse/CCometixLine/releases/latest/download/ccline-linux-x64.tar.gz
@@ -131,9 +142,11 @@ tar -xzf ccline-linux-x64.tar.gz
 cp ccline ~/.claude/ccline/
 chmod +x ~/.claude/ccline/ccline
 ```
+
 *系统要求: Ubuntu 22.04+, CentOS 9+, Debian 11+, RHEL 9+ (glibc 2.35+)*
 
 #### 选项 2: 静态链接版本（通用兼容）
+
 ```bash
 mkdir -p ~/.claude/ccline
 wget https://github.com/Haleclipse/CCometixLine/releases/latest/download/ccline-linux-x64-static.tar.gz
@@ -141,11 +154,12 @@ tar -xzf ccline-linux-x64-static.tar.gz
 cp ccline ~/.claude/ccline/
 chmod +x ~/.claude/ccline/ccline
 ```
+
 *适用于任何 Linux 发行版（静态链接，无依赖）*
 
 #### macOS (Intel)
 
-```bash  
+```bash
 mkdir -p ~/.claude/ccline
 wget https://github.com/Haleclipse/CCometixLine/releases/latest/download/ccline-macos-x64.tar.gz
 tar -xzf ccline-macos-x64.tar.gz
@@ -239,8 +253,38 @@ ccline --patch ~/.local/share/fnm/node-versions/v24.4.1/installation/lib/node_mo
 ### 模型显示
 
 显示简化的 Claude 模型名称：
+
 - `claude-3-5-sonnet` → `Sonnet 3.5`
 - `claude-4-sonnet` → `Sonnet 4`
+- `claude-fable-5-2` → `Fable 5.2`
+- `claude-opus-5-5` → `Opus 5.5`（200K 上下文）
+- `claude-opus-5-5[1m]` → `Opus 5.5 1M`（1M 上下文）
+
+内置模型清单统一维护在项目根目录的 [`models.toml`](models.toml)，包含 Claude 各系列及 GLM、Kimi、Qwen 的名称、别名和上下文上限。文件在编译时嵌入可执行文件，安装后无需额外携带。常规新增模型只需修改此文件，再运行 `cargo test`、`cargo build --release` 并替换已安装的可执行文件，无需修改 Rust 代码。例如：
+
+```toml
+[[models]]
+pattern = "claude-fable-5-2"
+aliases = ["fable-5-2", "claude-5-2-fable"]
+match_mode = "model_id"
+display_name = "Fable 5.2"
+context_limit = 200000
+```
+
+`aliases` 可省略。`match_mode = "model_id"` 匹配完整 ID，兼容日期和 `latest`、`preview` 等名称后缀，避免 `Fable 5` 误匹配 `Fable 5.2`。未指定模式时沿用大小写不敏感的子串匹配。规则按文件顺序首个命中项生效。
+
+名称解析顺序为：**用户配置 → 内置模型清单 → Claude 通用解析 → Claude Code 提供的显示名称**。通用解析保留了对新版本、新系列、旧式 ID 和 `[1m]` 的支持。
+
+需要自定义名称、适配特殊模型 ID 或调整上下文上限时，编辑 `~/.claude/ccline/models.toml`（Windows：`%USERPROFILE%\.claude\ccline\models.toml`）：
+
+```toml
+[[models]]
+pattern = "claude-fable-5-2"
+display_name = "Fable 5.2"
+context_limit = 200000
+```
+
+如果文件中有 `models = []`，请用上述条目替换该行。用户配置与项目清单使用相同格式，也支持 `aliases` 和 `match_mode`；省略模式时保留原有子串匹配行为，更具体的规则应放在前面。用户配置可只写需要覆盖的条目，空文件、缺失或无法解析时仍使用内置清单。保存后，下次状态栏调用即生效，无需重新编译或安装。未配置的上下文上限默认采用 200K；`[1m]` 会为已识别名称添加 `1M`，并将上限设为 1M。名称自动识别不会推断模型的真实上下文容量。
 
 ### 上下文窗口显示
 
@@ -259,13 +303,14 @@ CCometixLine 支持通过 TOML 文件和交互式 TUI 进行全面配置：
 ### 可用段落
 
 所有段落都支持广泛的自定义选项：
+
 - **基础控制**: 启用/禁用切换、自定义分隔符和图标、颜色自定义
 - **扩展选项**: 段落特定的高级配置，用于精细化控制
 
 #### 支持扩展选项的段落：
 
 - **目录段**: 路径显示控制、大小写样式、长度限制、父目录切换
-- **Git段**: 分支信息、状态格式、SHA显示、远程跟踪、存储/标签信息  
+- **Git段**: 分支信息、状态格式、SHA显示、远程跟踪、存储/标签信息
 - **模型段**: 显示格式、自定义名称映射、版本信息、缩写控制
 - **使用量段**: 可自定义元素的进度条、警告阈值、令牌单位选择
 - **会话段**: 多种时间格式、毫秒精度、紧凑模式、空闲时间跟踪
@@ -275,6 +320,7 @@ CCometixLine 支持通过 TOML 文件和交互式 TUI 进行全面配置：
 ### 快速配置示例
 
 #### 使用量段配置进度条
+
 ```toml
 [[segments]]
 id = "usage"
@@ -290,6 +336,7 @@ critical_threshold = 90         # 90%时严重警告
 ```
 
 #### Git段丰富信息配置
+
 ```toml
 [[segments]]
 id = "git" 
@@ -304,6 +351,7 @@ status_format = "symbols"       # 使用符号显示状态
 ```
 
 #### 模型段自定义名称配置
+
 ```toml
 [[segments]]
 id = "model"
@@ -316,7 +364,6 @@ abbreviate_names = true         # 使用缩写
 ```
 
 完整配置示例请参考 [`example_enhanced.toml`](example_enhanced.toml)。
-
 
 ## 系统要求
 
@@ -342,23 +389,23 @@ cargo build --release
 
 ## 路线图
 
-- [x] TOML 配置文件支持
-- [x] TUI 配置界面  
-- [x] 自定义主题
-- [x] 交互式主菜单
-- [x] Claude Code 增强工具
-- [x] **扩展段落配置选项**
-  - [x] 使用量段进度条控制
-  - [x] 自定义模型名称映射
-  - [x] 会话段多种时间格式
-  - [x] 成本段货币格式化
-  - [x] 增强Git状态显示选项
-  - [x] 目录路径显示控制
-- [x] **高级TUI界面改进**
-  - [x] 基于选项类型的智能控件选择
-  - [x] 实时配置验证
-  - [x] 增强预览功能
-  - [x] 快速重置功能
+- [X] TOML 配置文件支持
+- [X] TUI 配置界面
+- [X] 自定义主题
+- [X] 交互式主菜单
+- [X] Claude Code 增强工具
+- [X] **扩展段落配置选项**
+  - [X] 使用量段进度条控制
+  - [X] 自定义模型名称映射
+  - [X] 会话段多种时间格式
+  - [X] 成本段货币格式化
+  - [X] 增强Git状态显示选项
+  - [X] 目录路径显示控制
+- [X] **高级TUI界面改进**
+  - [X] 基于选项类型的智能控件选择
+  - [X] 实时配置验证
+  - [X] 增强预览功能
+  - [X] 快速重置功能
 
 ## 贡献
 

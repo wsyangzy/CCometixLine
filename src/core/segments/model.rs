@@ -1,58 +1,68 @@
 use super::{Segment, SegmentData};
-use crate::config::{InputData, ModelConfig, SegmentId, ModelSegmentConfig, ModelDisplayFormat};
+use crate::config::{InputData, ModelConfig, ModelDisplayFormat, ModelSegmentConfig, SegmentId};
 use std::collections::HashMap;
 
 pub struct ModelSegment {
     config: ModelSegmentConfig,
+    models: ModelConfig,
 }
 
 impl ModelSegment {
     pub fn new() -> Self {
         Self {
             config: ModelSegmentConfig::default(),
+            models: ModelConfig::load(),
         }
     }
-    
+
     pub fn with_config(options: &HashMap<String, serde_json::Value>) -> Self {
         Self {
             config: ModelSegmentConfig::from_options(options),
+            models: ModelConfig::load(),
         }
     }
 }
 
 impl Segment for ModelSegment {
     fn collect(&self, input: &InputData) -> Option<SegmentData> {
-        let formatted_name = self.format_model_name(&input.model.id, &input.model.display_name);
-        
+        let formatted_name = self.models.format_name(
+            &input.model.id,
+            &input.model.display_name,
+            self.config.abbreviate_names,
+        );
+
         let (primary, secondary) = match self.config.display_format {
             ModelDisplayFormat::Name => (formatted_name, String::new()),
             ModelDisplayFormat::Full => {
                 let version = if self.config.show_version {
-                    self.extract_version(&input.model.id)
+                    ModelConfig::get_version(&input.model.id)
                 } else {
                     None
                 };
-                
+
                 if let Some(ver) = version {
                     (formatted_name, format!("v{}", ver))
                 } else {
                     (formatted_name, String::new())
                 }
-            },
+            }
             ModelDisplayFormat::Custom => {
                 if let Some(custom_name) = self.config.custom_names.get(&input.model.id) {
                     (custom_name.clone(), String::new())
                 } else {
                     (formatted_name, String::new())
                 }
-            },
+            }
         };
 
         let mut metadata = HashMap::new();
         metadata.insert("model_id".to_string(), input.model.id.clone());
         metadata.insert("display_name".to_string(), input.model.display_name.clone());
         metadata.insert("formatted_name".to_string(), primary.clone());
-        metadata.insert("display_format".to_string(), format!("{:?}", self.config.display_format));
+        metadata.insert(
+            "display_format".to_string(),
+            format!("{:?}", self.config.display_format),
+        );
 
         Some(SegmentData {
             primary,
@@ -66,73 +76,64 @@ impl Segment for ModelSegment {
     }
 }
 
-impl ModelSegment {
-    fn format_model_name(&self, id: &str, display_name: &str) -> String {
-        let model_config = ModelConfig::load();
-
-        // Try to get display name from external config first
-        let base_name = if let Some(config_name) = model_config.get_display_name(id) {
-            config_name
-        } else {
-            // Fallback to Claude Code's official display_name for unrecognized models
-            display_name.to_string()
-        };
-        
-        if self.config.abbreviate_names {
-            self.abbreviate_model_name(&base_name)
-        } else {
-            base_name
-        }
-    }
-    
-    fn abbreviate_model_name(&self, name: &str) -> String {
-        // Apply common abbreviations
-        name.replace("claude-", "")
-            .replace("3-5-", "3.5-")
-            .replace("4-", "4-")
-            .replace("sonnet", "Sonnet")
-            .replace("haiku", "Haiku")
-            .replace("opus", "Opus")
-            .replace("gpt-", "GPT-")
-            .replace("turbo", "Turbo")
-    }
-    
-    fn extract_version(&self, model_id: &str) -> Option<String> {
-        // Extract version from model ID using simple string parsing
-        // Look for patterns like "3.5", "4", "3-5", etc.
-        
-        if model_id.contains("3-5") || model_id.contains("3.5") {
-            Some("3.5".to_string())
-        } else if model_id.contains("4-") || model_id.contains("4.") {
-            Some("4".to_string())
-        } else if model_id.contains("3-") {
-            Some("3".to_string())
-        } else {
-            // Try to find any number pattern
-            let chars: Vec<char> = model_id.chars().collect();
-            let mut version = String::new();
-            let mut in_number = false;
-            
-            for &ch in &chars {
-                if ch.is_ascii_digit() || ch == '.' {
-                    version.push(ch);
-                    in_number = true;
-                } else if in_number && !version.is_empty() {
-                    break;
-                }
-            }
-            
-            if !version.is_empty() {
-                Some(version)
-            } else {
-                None
-            }
-        }
-    }
-}
-
 impl Default for ModelSegment {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn full_display_uses_the_complete_claude_version() {
+        let segment = ModelSegment {
+            config: ModelSegmentConfig {
+                display_format: ModelDisplayFormat::Full,
+                show_version: true,
+                ..ModelSegmentConfig::default()
+            },
+            models: ModelConfig::default(),
+        };
+        for (model_id, expected) in [
+            ("claude-fable-5-2", "5.2"),
+            ("claude-fable-5-2-20261112[1m]", "5.2"),
+            ("CLAUDE-OPUS-6-12", "6.12"),
+            ("claude-3-5-sonnet-20241022", "3.5"),
+            ("claude-new-family-8-3", "8.3"),
+        ] {
+            let input = serde_json::from_value(serde_json::json!({
+                "model": {"id": model_id, "display_name": "Official Name"},
+                "workspace": {"current_dir": "."},
+                "transcript_path": ""
+            }))
+            .unwrap();
+            let output = segment.collect(&input).unwrap();
+            assert_eq!(output.secondary, format!("v{expected}"), "{model_id}");
+        }
+    }
+
+    #[test]
+    fn display_options_and_unknown_names_are_preserved() {
+        let input = serde_json::from_value(serde_json::json!({
+            "model": {"id": "unknown-model", "display_name": "gpt-6-turbo"},
+            "workspace": {"current_dir": "."},
+            "transcript_path": ""
+        }))
+        .unwrap();
+        let mut segment = ModelSegment {
+            config: ModelSegmentConfig::default(),
+            models: ModelConfig::default(),
+        };
+        assert_eq!(segment.collect(&input).unwrap().primary, "GPT-6-Turbo");
+        segment.config.abbreviate_names = false;
+        assert_eq!(segment.collect(&input).unwrap().primary, "gpt-6-turbo");
+        segment.config.display_format = ModelDisplayFormat::Custom;
+        segment
+            .config
+            .custom_names
+            .insert("unknown-model".to_string(), "My Model".to_string());
+        assert_eq!(segment.collect(&input).unwrap().primary, "My Model");
     }
 }
